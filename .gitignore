@@ -20,6 +20,9 @@ BundleArtifacts/
 *.swp
 *~
 
+## Downloaded artifacts
+artifact-*/
+
 ## OS
 Thumbs.db
 .DS_Store
