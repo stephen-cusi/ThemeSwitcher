@@ -1,0 +1,42 @@
+name: Build & Verify
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        platform: [x64, ARM64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore ThemeSwitcher.sln -p:Platform=${{ matrix.platform }}
+
+      - name: Build
+        run: dotnet build ThemeSwitcher.sln -c Release -p:Platform=${{ matrix.platform }} --no-restore
+
+      - name: Verify build output
+        shell: pwsh
+        run: |
+          $outputDir = "ThemeSwitcher/bin/Release/net8.0-windows10.0.19041.0/${{ matrix.platform }}"
+          if (Test-Path $outputDir) {
+            Write-Host "✅ Build output found at $outputDir"
+            Get-ChildItem $outputDir -Filter "*.exe" | ForEach-Object { Write-Host "  → $($_.Name)" }
+            Get-ChildItem $outputDir -Filter "*.dll" | Select-Object -First 5 | ForEach-Object { Write-Host "  → $($_.Name)" }
+          } else {
+            Write-Host "❌ Build output directory not found!"
+            exit 1
+          }
