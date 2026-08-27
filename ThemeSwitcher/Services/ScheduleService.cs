@@ -19,6 +19,7 @@ public class ScheduleService
     private Timer _timer;
     private DateTime _lastCheckDate = DateTime.MinValue;
     private (DateTime Sunrise, DateTime Sunset)? _todaySunTimes;
+    private readonly SemaphoreSlim _checkLock = new(1, 1);
 
     /// <summary>
     /// 当前状态信息（用于UI显示）
@@ -51,7 +52,7 @@ public class ScheduleService
     public void Start()
     {
         // 每30秒检查一次
-        _timer = new Timer(OnTimerTick, null, TimeSpan.Zero, TimeSpan.FromSeconds(30));
+        _timer = new Timer(_ => _ = OnTimerTickAsync(), null, TimeSpan.Zero, TimeSpan.FromSeconds(30));
     }
 
     /// <summary>
@@ -64,15 +65,19 @@ public class ScheduleService
     }
 
     /// <summary>
-    /// 立即执行一次检查
+    /// 立即执行一次检查（从 UI 线程安全调用）
     /// </summary>
     public void ForceCheck()
     {
-        OnTimerTick(null);
+        _ = OnTimerTickAsync();
     }
 
-    private async void OnTimerTick(object state)
+    private async Task OnTimerTickAsync()
     {
+        // 防止并发执行（Timer线程 + UI线程同时调用）
+        if (!await _checkLock.WaitAsync(0))
+            return;
+
         try
         {
             var settings = _settingsService.Settings;
@@ -113,6 +118,10 @@ public class ScheduleService
         {
             StatusMessage = $"调度异常: {ex.Message}";
             StatusChanged?.Invoke(this, EventArgs.Empty);
+        }
+        finally
+        {
+            _checkLock.Release();
         }
     }
 

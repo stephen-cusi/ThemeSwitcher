@@ -3,7 +3,6 @@ using Microsoft.UI.Xaml.Controls;
 using System;
 using ThemeSwitcher.Models;
 using ThemeSwitcher.Services;
-using Windows.ApplicationModel;
 
 namespace ThemeSwitcher;
 
@@ -63,8 +62,8 @@ public sealed partial class MainWindow : Window
 
     private async System.Threading.Tasks.Task LoadAutoStartState()
     {
-        var state = await _startupService.GetStateAsync();
-        AutoStartToggle.IsOn = state == StartupTaskState.Enabled;
+        var enabled = await _startupService.IsEnabledAsync();
+        AutoStartToggle.IsOn = enabled;
     }
 
     private void UpdateModePanels(SwitchMode mode)
@@ -124,7 +123,7 @@ public sealed partial class MainWindow : Window
     private void LightTimePicker_TimeChanged(object sender, TimePickerValueChangedEventArgs e)
     {
         if (_isLoading) return;
-        App.SettingsService.Settings.LightTime = LightTimePicker.Time.ToString(@"hh\:mm");
+        App.SettingsService.Settings.LightTime = LightTimePicker.Time.ToString(@"HH\:mm");
         App.SettingsService.Save();
         App.ScheduleService.ForceCheck();
     }
@@ -132,7 +131,7 @@ public sealed partial class MainWindow : Window
     private void DarkTimePicker_TimeChanged(object sender, TimePickerValueChangedEventArgs e)
     {
         if (_isLoading) return;
-        App.SettingsService.Settings.DarkTime = DarkTimePicker.Time.ToString(@"hh\:mm");
+        App.SettingsService.Settings.DarkTime = DarkTimePicker.Time.ToString(@"HH\:mm");
         App.SettingsService.Save();
         App.ScheduleService.ForceCheck();
     }
@@ -203,7 +202,7 @@ public sealed partial class MainWindow : Window
                 var dlg = new ContentDialog
                 {
                     Title = "无法启用自启",
-                    Content = "请在任务管理器的「启动」选项卡中确认，或重新安装应用。",
+                    Content = "写入注册表失败，请以管理员身份运行后重试。",
                     CloseButtonText = "确定",
                     XamlRoot = Content.XamlRoot
                 };
