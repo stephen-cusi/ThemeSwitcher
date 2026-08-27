@@ -33,26 +33,21 @@ jobs:
       - name: Build
         run: dotnet build ThemeSwitcher/ThemeSwitcher.csproj -c Release -p:Platform=${{ matrix.platform }} --no-restore
 
-      - name: List build output
+      - name: Verify build output
         shell: pwsh
         run: |
-          Write-Host "=== Listing all files under ThemeSwitcher/bin ==="
-          if (Test-Path "ThemeSwitcher/bin") {
-            Get-ChildItem "ThemeSwitcher/bin" -Recurse -File | ForEach-Object {
-              Write-Host $_.FullName.Replace("${{ github.workspace }}\", "")
-            }
+          $outputDir = "ThemeSwitcher/bin/${{ matrix.platform }}/Release/net8.0-windows10.0.19041.0/${{ matrix.rid }}"
+          if (Test-Path $outputDir) {
+            Write-Host "✅ Build output: $outputDir"
+            Get-ChildItem $outputDir -Filter "ThemeSwitcher.exe" | ForEach-Object { Write-Host "  → $($_.Name) ($([math]::Round($_.Length/1KB)) KB)" }
           } else {
-            Write-Host "ThemeSwitcher/bin does not exist!"
-            Write-Host "=== Listing project root ==="
-            Get-ChildItem -Recurse -Directory | ForEach-Object {
-              Write-Host $_.FullName.Replace("${{ github.workspace }}\", "")
-            }
+            Write-Host "❌ Output not found at $outputDir"
+            exit 1
           }
 
       - name: Upload build artifacts
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ThemeSwitcher-${{ matrix.platform }}
-          path: ThemeSwitcher/bin/
-          if-no-files-found: warn
+          path: ThemeSwitcher/bin/${{ matrix.platform }}/Release/net8.0-windows10.0.19041.0/${{ matrix.rid }}/
+          if-no-files-found: error
