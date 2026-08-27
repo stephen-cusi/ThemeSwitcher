@@ -19,9 +19,12 @@ public sealed partial class MainWindow : Window
 
         InitializeUI();
         LoadSettings();
+        UpdateStatusDisplay();
 
         App.ScheduleService.StatusChanged += ScheduleService_StatusChanged;
-        UpdateStatusDisplay();
+
+        // 异步加载自启状态（_isLoading 仍为 true，不会触发 Toggled 事件）
+        _ = LoadAutoStartState();
 
         _isLoading = false;
     }
@@ -55,15 +58,15 @@ public sealed partial class MainWindow : Window
 
         SunriseOffsetBox.Value = s.SunriseOffsetMinutes;
         SunsetOffsetBox.Value = s.SunsetOffsetMinutes;
-
-        // 自启状态（异步加载）
-        _ = LoadAutoStartState();
     }
 
     private async System.Threading.Tasks.Task LoadAutoStartState()
     {
         var enabled = await _startupService.IsEnabledAsync();
+        // 先设 _isLoading 防止 Toggled 事件触发写注册表
+        _isLoading = true;
         AutoStartToggle.IsOn = enabled;
+        _isLoading = false;
     }
 
     private void UpdateModePanels(SwitchMode mode)
