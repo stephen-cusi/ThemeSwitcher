@@ -2,13 +2,15 @@
 
 基于 WinUI 3 的 Windows 深浅色主题自动切换工具，支持 Windows 10 1809+ / Windows 11，x64 与 ARM64 架构。
 
+> 本项目为**第二个主题切换器**，由**豆包（Doubao）**编写，MiMo（我）负责上传到 GitHub 并编写 CI/CD 构建流程、修复自启和界面等 bug。
+
 ## 功能特性
 
 - **手动切换**：一键切换系统深浅色主题
 - **定时切换**：自定义浅色/深色开始时间
 - **日出日落自动切换**：基于系统地理位置，日出后切浅色、日落后切深色
 - **切换范围可控**：可分别控制系统主题（任务栏/资源管理器）和应用主题
-- **开机自启**：支持 MSIX StartupTask 开机自启动
+- **开机自启**：通过注册表实现，支持非打包应用
 - **跨架构**：支持 x64 和 ARM64（WOA 设备如 Surface Pro X 等）
 
 ## 系统要求
@@ -20,54 +22,35 @@
   - **通用 Windows 平台开发**（UWP 工具集）
   - **Windows 应用 SDK C# 开发工具**（单项目 MSIX 打包支持）
 
+## 快速开始
+
+1. 从 [GitHub Actions](https://github.com/stephen-cusi/ThemeSwitcher/actions) 下载最新构建产物
+2. 解压后直接运行 `ThemeSwitcher.exe`
+3. 首次运行需要安装 [Windows App Runtime](https://github.com/microsoft/WindowsAppSDK/releases)
+
 ## 构建步骤
 
 ### 1. 还原依赖
 
 ```bash
-dotnet restore ThemeSwitcher.sln
+dotnet restore ThemeSwitcher/ThemeSwitcher.csproj
 ```
 
 ### 2. 构建 x64 版本
 
 ```bash
 # 调试版
-dotnet build ThemeSwitcher.sln -c Debug -p:Platform=x64
+dotnet build ThemeSwitcher/ThemeSwitcher.csproj -c Debug -p:Platform=x64
 
 # 发布版
-dotnet build ThemeSwitcher.sln -c Release -p:Platform=x64
+dotnet build ThemeSwitcher/ThemeSwitcher.csproj -c Release -p:Platform=x64
 ```
 
 ### 3. 构建 ARM64 版本
 
 ```bash
-dotnet build ThemeSwitcher.sln -c Release -p:Platform=ARM64
+dotnet build ThemeSwitcher/ThemeSwitcher.csproj -c Release -p:Platform=ARM64
 ```
-
-### 4. 生成 MSIX 安装包
-
-在 Visual Studio 中：
-
-1. 右键 `ThemeSwitcher.Package` 项目 → **发布** → **创建应用程序包**
-2. 选择旁加载 (Sideloading)
-3. 选择架构：勾选 **x64** 和 **ARM64**
-4. 选择或创建签名证书（测试用可自动生成临时证书）
-5. 点击创建，输出 MSIX 包到 `AppPackages` 目录
-
-命令行方式（需先配置签名证书）：
-
-```bash
-msbuild ThemeSwitcher.Package/ThemeSwitcher.Package.wapproj /p:Configuration=Release /p:Platform=x64 /t:Publish /p:AppxPackageDir=..\AppPackages\x64\
-msbuild ThemeSwitcher.Package/ThemeSwitcher.Package.wapproj /p:Configuration=Release /p:Platform=ARM64 /t:Publish /p:AppxPackageDir=..\AppPackages\ARM64\
-```
-
-### 5. 安装 MSIX
-
-1. 双击生成的 `.msix` 文件
-2. 点击「安装」
-3. 首次运行时系统会请求位置权限（用于日出日落模式），请允许
-
-> 注意：如果使用自签名证书，需要先将证书安装到「受信任的根证书颁发机构」。
 
 ## 项目结构
 
@@ -86,13 +69,13 @@ ThemeSwitcher/
 │   │   ├── SunriseSunsetService.cs    # 日出日落计算
 │   │   ├── LocationService.cs         # 地理位置
 │   │   ├── SettingsService.cs         # 设置持久化
-│   │   └── StartupService.cs          # 开机自启管理
+│   │   └── StartupService.cs          # 开机自启管理（注册表方式）
 │   ├── Properties/PublishProfiles/    # 发布配置 (x64/ARM64)
 │   └── Assets/                        # 应用资源
-└── ThemeSwitcher.Package/             # MSIX 打包项目
-    ├── ThemeSwitcher.Package.wapproj
-    ├── Package.appxmanifest           # 应用清单（含位置权限+自启）
-    └── Images/                        # 包图标资源
+├── ThemeSwitcher.Package/             # MSIX 打包项目（可选）
+│   ├── ThemeSwitcher.Package.wapproj
+│   └── Images/                        # 包图标资源
+└── .github/workflows/build.yml        # CI 构建验证
 ```
 
 ## 实现原理
@@ -115,13 +98,7 @@ HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize
 
 ### 定时调度
 
-后台 `Timer` 每 30 秒检查一次当前时间，根据设置的模式判断是否需要切换主题，避免重复切换。
-
-## 自定义
-
-- 修改 `Package.appxmanifest` 中的 `Publisher` 和应用名称
-- 替换 `ThemeSwitcher.Package/Images/` 下的图标为自己的设计
-- 在 `ThemeSwitcher.csproj` 中调整 `Version` 版本号
+后台 `Timer` 每 30 秒检查一次当前时间，根据设置的模式判断是否需要切换主题，使用 `SemaphoreSlim` 防止并发竞态。
 
 ## 许可证
 
