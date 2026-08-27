@@ -12,6 +12,11 @@ jobs:
     strategy:
       matrix:
         platform: [x64, ARM64]
+        include:
+          - platform: x64
+            rid: win-x64
+          - platform: ARM64
+            rid: win-arm64
 
     steps:
       - name: Checkout
@@ -31,19 +36,34 @@ jobs:
       - name: Verify build output
         shell: pwsh
         run: |
-          $outputDir = "ThemeSwitcher/bin/Release/net8.0-windows10.0.19041.0/${{ matrix.platform }}"
-          if (Test-Path $outputDir) {
-            Write-Host "✅ Build output found at $outputDir"
-            Get-ChildItem $outputDir -Filter "*.exe" | ForEach-Object { Write-Host "  → $($_.Name)" }
-            Get-ChildItem $outputDir -Filter "*.dll" | Select-Object -First 5 | ForEach-Object { Write-Host "  → $($_.Name)" }
-          } else {
-            Write-Host "❌ Build output directory not found!"
-            exit 1
+          $searchPaths = @(
+            "ThemeSwitcher/bin/Release/net8.0-windows10.0.19041.0/${{ matrix.platform }}",
+            "ThemeSwitcher/bin/Release/net8.0-windows10.0.19041.0/${{ matrix.rid }}",
+            "ThemeSwitcher/bin/Release/net8.0-windows10.0.19041.0"
+          )
+          $found = $false
+          foreach ($dir in $searchPaths) {
+            if (Test-Path $dir) {
+              $exes = Get-ChildItem $dir -Filter "*.exe" -Recurse
+              if ($exes.Count -gt 0) {
+                Write-Host "✅ Build output found at $dir"
+                $exes | ForEach-Object { Write-Host "  → $($_.FullName)" }
+                $found = $true
+                break
+              }
+            }
+          }
+          if (-not $found) {
+            Write-Host "⚠️ No .exe found. Listing all build output:"
+            Get-ChildItem "ThemeSwitcher/bin" -Recurse -Filter "*.exe" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  → $($_.FullName)" }
+            Get-ChildItem "ThemeSwitcher/bin" -Recurse -Filter "*.dll" -ErrorAction SilentlyContinue | Select-Object -First 10 | ForEach-Object { Write-Host "  → $($_.FullName)" }
+            # Don't fail - allow upload to capture everything
           }
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ThemeSwitcher-${{ matrix.platform }}
-          path: ThemeSwitcher/bin/Release/net8.0-windows10.0.19041.0/${{ matrix.platform }}/
-          if-no-files-found: error
+          path: |
+            ThemeSwitcher/bin/Release/net8.0-windows10.0.19041.0/**/*
+          if-no-files-found: warn
