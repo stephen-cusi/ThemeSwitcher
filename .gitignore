@@ -26,3 +26,4 @@ artifact-*/
 ## OS
 Thumbs.db
 .DS_Store
+build-log.txt
