@@ -23,10 +23,10 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore dependencies
-        run: dotnet restore ThemeSwitcher.sln -p:Platform=${{ matrix.platform }}
+        run: dotnet restore ThemeSwitcher/ThemeSwitcher.csproj -p:Platform=${{ matrix.platform }}
 
       - name: Build
-        run: dotnet build ThemeSwitcher.sln -c Release -p:Platform=${{ matrix.platform }} --no-restore
+        run: dotnet build ThemeSwitcher/ThemeSwitcher.csproj -c Release -p:Platform=${{ matrix.platform }} --no-restore
 
       - name: Verify build output
         shell: pwsh
@@ -40,3 +40,10 @@ jobs:
             Write-Host "❌ Build output directory not found!"
             exit 1
           }
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ThemeSwitcher-${{ matrix.platform }}
+          path: ThemeSwitcher/bin/Release/net8.0-windows10.0.19041.0/${{ matrix.platform }}/
+          if-no-files-found: error
