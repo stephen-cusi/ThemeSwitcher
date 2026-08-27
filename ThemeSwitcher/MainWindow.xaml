@@ -1,0 +1,154 @@
+<Window
+    x:Class="ThemeSwitcher.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 标题栏区域 -->
+        <Grid x:Name="AppTitleBar" Height="48" Padding="16,0" VerticalAlignment="Top">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="🎨 主题切换器" Style="{StaticResource CaptionTextBlockStyle}"
+                       VerticalAlignment="Center" FontSize="14"/>
+            <TextBlock x:Name="StatusText" Grid.Column="1" Margin="16,0,0,0"
+                       VerticalAlignment="Center" FontSize="12" Opacity="0.7"/>
+            <Button x:Name="RefreshBtn" Grid.Column="2" Content="立即检查"
+                    Click="RefreshBtn_Click" Padding="12,4" FontSize="12"/>
+        </Grid>
+
+        <!-- 主内容 -->
+        <ScrollViewer Grid.Row="1" Padding="24,16">
+            <StackPanel Spacing="20" MaxWidth="600">
+
+                <!-- 当前状态卡片 -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="20">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="当前状态" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock x:Name="CurrentThemeText" Text="浅色主题"
+                                           Style="{StaticResource DisplayTextBlockStyle}" FontSize="28"/>
+                                <TextBlock x:Name="NextSwitchText" Text="下次切换：--"
+                                           Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" x:Name="ToggleBtn" Content="切换主题"
+                                    Click="ToggleBtn_Click" Padding="20,10" FontSize="14"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- 切换模式 -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="20">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="切换模式" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        <RadioButtons x:Name="ModeRadio" SelectionChanged="ModeRadio_SelectionChanged">
+                            <RadioButton Content="手动" Tag="Manual"/>
+                            <RadioButton Content="定时" Tag="Scheduled"/>
+                            <RadioButton Content="日出日落" Tag="SunriseSunset"/>
+                        </RadioButtons>
+
+                        <!-- 定时模式设置 -->
+                        <Grid x:Name="ScheduledPanel" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="浅色开始时间" Style="{StaticResource CaptionTextBlockStyle}"/>
+                                <TimePicker x:Name="LightTimePicker" ClockIdentifier="24HourClock"
+                                            TimeChanged="LightTimePicker_TimeChanged"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="深色开始时间" Style="{StaticResource CaptionTextBlockStyle}"/>
+                                <TimePicker x:Name="DarkTimePicker" ClockIdentifier="24HourClock"
+                                            TimeChanged="DarkTimePicker_TimeChanged"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- 日出日落模式设置 -->
+                        <StackPanel x:Name="SunrisePanel" Visibility="Collapsed" Spacing="12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="位置信息" Style="{StaticResource CaptionTextBlockStyle}"/>
+                                    <TextBlock x:Name="LocationText" Text="未获取" Opacity="0.7"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="获取位置" Click="GetLocationBtn_Click"
+                                        Padding="12,4" FontSize="12" VerticalAlignment="Bottom"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="日出偏移（分钟）" Style="{StaticResource CaptionTextBlockStyle}"/>
+                                    <NumberBox x:Name="SunriseOffsetBox" Minimum="-120" Maximum="120"
+                                               Value="0" ValueChanged="SunriseOffsetBox_ValueChanged"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="日落偏移（分钟）" Style="{StaticResource CaptionTextBlockStyle}"/>
+                                    <NumberBox x:Name="SunsetOffsetBox" Minimum="-120" Maximum="120"
+                                               Value="0" ValueChanged="SunsetOffsetBox_ValueChanged"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- 切换范围 -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="20">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="切换范围" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        <ToggleSwitch x:Name="SwitchSystemToggle" Header="切换系统主题（任务栏、资源管理器）"
+                                      IsOn="True" Toggled="SwitchSystemToggle_Toggled"/>
+                        <ToggleSwitch x:Name="SwitchAppToggle" Header="切换应用主题（UWP/WinUI应用）"
+                                      IsOn="True" Toggled="SwitchAppToggle_Toggled"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- 通用设置 -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="20">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="通用设置" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        <ToggleSwitch x:Name="AutoStartToggle" Header="开机自启动"
+                                      Toggled="AutoStartToggle_Toggled"/>
+                        <TextBlock Text="支持 Windows 10 1809+ / Windows 11 · x64 / ARM64"
+                                   Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.5"
+                                   Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>
