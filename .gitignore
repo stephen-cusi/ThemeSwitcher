@@ -27,3 +27,4 @@ artifact-*/
 Thumbs.db
 .DS_Store
 build-log.txt
+ci-log.txt
