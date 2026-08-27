@@ -4,7 +4,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    Title="主题切换器"
+    Width="520" Height="700"
+    MinWidth="400" MinHeight="500">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
@@ -12,24 +15,24 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 标题栏区域 -->
-        <Grid x:Name="AppTitleBar" Height="48" Padding="16,0" VerticalAlignment="Top">
+        <!-- 标题栏区域（自定义标题栏需要给右侧窗口按钮留空间） -->
+        <Grid x:Name="AppTitleBar" Height="48" Padding="16,0,138,0" VerticalAlignment="Top">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <TextBlock Text="🎨 主题切换器" Style="{StaticResource CaptionTextBlockStyle}"
-                       VerticalAlignment="Center" FontSize="14"/>
-            <TextBlock x:Name="StatusText" Grid.Column="1" Margin="16,0,0,0"
-                       VerticalAlignment="Center" FontSize="12" Opacity="0.7"/>
-            <Button x:Name="RefreshBtn" Grid.Column="2" Content="立即检查"
-                    Click="RefreshBtn_Click" Padding="12,4" FontSize="12"/>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
+                <TextBlock Text="🎨" FontSize="16" VerticalAlignment="Center"/>
+                <TextBlock Text="主题切换器" Style="{StaticResource CaptionTextBlockStyle}"
+                           VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
+                <TextBlock x:Name="StatusText"
+                           VerticalAlignment="Center" FontSize="12" Opacity="0.5"/>
+            </StackPanel>
         </Grid>
 
         <!-- 主内容 -->
-        <ScrollViewer Grid.Row="1" Padding="24,16">
-            <StackPanel Spacing="20" MaxWidth="600">
+        <ScrollViewer Grid.Row="1" Padding="16,8,16,16">
+            <StackPanel Spacing="16" MaxWidth="600" HorizontalAlignment="Center">
 
                 <!-- 当前状态卡片 -->
                 <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
