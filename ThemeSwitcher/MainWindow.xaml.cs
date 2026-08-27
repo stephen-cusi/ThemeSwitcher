@@ -14,6 +14,9 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Title = "主题切换器";
+        MinWidth = 400; MinHeight = 500;
+        Width = 520; Height = 700;
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
 
